@@ -58,7 +58,7 @@ Thus, henceforth, we limit our discussion to the setting where $min_i \le b_i \l
 ### Normalizing the Costs
 We now define a normalization function for any cost value $x_i$ with $min_i \le x_i \le max_i$ (for $i \in \{1,2\}$). We define:
 
-$$ \overline{x_i} = rac{x_i - min_i}{max_i - min_i} $$
+$$ \overline{x_i} = frac{x_i - min_i}{max_i - min_i} $$
 
 This normalization maps all cost values into the interval $[0...1]$.
 

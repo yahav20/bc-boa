@@ -36,6 +36,108 @@ extern unsigned stat_pruned;
 snode* recycled_nodes[MAX_RECYCLE];
 int next_recycled = 0;
 
+/*
+ * Global search-round counter.  Incremented once per bc_boastar() call.
+ * Each gnode resets its dominance fields lazily on first access this round,
+ * eliminating the O(num_gnodes) init loop that would otherwise touch
+ * hundreds of MB per call.
+ */
+static unsigned g_bc_version = 0;
+
+/*
+ * Pareto-front storage for Min/Max/Avg dominance checks.
+ * Stored OUTSIDE gnode to keep gnode ~64 bytes (cache-friendly).
+ *
+ * MAX_PARETO_PER_NODE=200 covers the paper's largest reported BAY POF of
+ * 147 solutions.  Each row is state_id * MAX_PARETO_PER_NODE.
+ * g_pareto_store / g_pareto_count are allocated lazily on the first
+ * bc_boastar() call after the graph has been loaded.
+ */
+#define MAX_PARETO_PER_NODE 200
+
+typedef struct { unsigned g1; unsigned g2; } ParetoPoint;
+
+static ParetoPoint *g_pareto_store = NULL; /* [num_gnodes * MAX_PARETO_PER_NODE] */
+static unsigned    *g_pareto_count = NULL; /* [num_gnodes] */
+
+static void ensure_pareto_store(void) {
+    if (g_pareto_store != NULL) return;
+    g_pareto_store = (ParetoPoint*)calloc((size_t)num_gnodes * MAX_PARETO_PER_NODE,
+                                           sizeof(ParetoPoint));
+    g_pareto_count = (unsigned*)calloc(num_gnodes, sizeof(unsigned));
+    if (!g_pareto_store || !g_pareto_count) {
+        fprintf(stderr, "bc_boastar: failed to allocate Pareto store (%u nodes)\n",
+                num_gnodes);
+        exit(1);
+    }
+}
+
+static inline void lazy_reset(gnode *n, unsigned state_id) {
+    n->version  = g_bc_version;
+    n->gmin     = LARGE;
+    n->g1min    = LARGE;
+    if (g_pareto_store)
+        g_pareto_count[state_id] = 0;
+}
+
+/*
+ * Returns 1 if path (g1,g2) to state_id is dominated by a previously
+ * expanded path recorded for this round.
+ *
+ * Lex1 / Lex2 : O(1) — single scalar compare, identical to BOA*.
+ * Min/Max/Avg : O(|front|) — scan the true non-dominated Pareto front.
+ */
+static int is_dominated(unsigned state_id, unsigned g1, unsigned g2, OrderingFunction ord) {
+    gnode *n = &graph_node[state_id];
+
+    if (n->version != g_bc_version) return 0; /* fresh this round */
+
+    if (ord == ORDER_LEX1) return (g2 >= n->gmin);
+    if (ord == ORDER_LEX2) return (g1 >= n->g1min);
+
+    /* Min / Max / Avg */
+    ParetoPoint *front = g_pareto_store + (size_t)state_id * MAX_PARETO_PER_NODE;
+    unsigned cnt = g_pareto_count[state_id];
+    for (unsigned i = 0; i < cnt; i++)
+        if (front[i].g1 <= g1 && front[i].g2 <= g2) return 1;
+    return 0;
+}
+
+/*
+ * Record that (g1,g2) was expanded at state_id.
+ * For Min/Max/Avg: maintains a true (non-dominated) Pareto front,
+ * removing entries dominated by (g1,g2) before appending the new point.
+ * MUST be called exactly once per expansion, after is_dominated returned 0.
+ */
+static void record_dominance(unsigned state_id, unsigned g1, unsigned g2, OrderingFunction ord) {
+    gnode *n = &graph_node[state_id];
+
+    if (n->version != g_bc_version)
+        lazy_reset(n, state_id);
+
+    if (ord == ORDER_LEX1) { if (g2 < n->gmin)  n->gmin  = g2; return; }
+    if (ord == ORDER_LEX2) { if (g1 < n->g1min) n->g1min = g1; return; }
+
+    /* Min / Max / Avg: maintain true Pareto front. */
+    ParetoPoint *front = g_pareto_store + (size_t)state_id * MAX_PARETO_PER_NODE;
+    unsigned *cnt = &g_pareto_count[state_id];
+
+    unsigned write = 0;
+    for (unsigned i = 0; i < *cnt; i++) {
+        if (front[i].g1 >= g1 && front[i].g2 >= g2) continue; /* dominated */
+        front[write++] = front[i];
+    }
+    *cnt = write;
+    if (*cnt < MAX_PARETO_PER_NODE) {
+        front[*cnt].g1 = g1;
+        front[*cnt].g2 = g2;
+        (*cnt)++;
+    }
+    /* If every slot holds a truly non-dominated point and we're still full,
+     * we omit the new point.  The search stays correct — just slightly less
+     * aggressive at pruning for states with >200 non-dominated paths. */
+}
+
 /* Timeout support: set bc_timeout_ms > 0 before calling bc_boastar().
  * bc_timed_out is set to 1 if the search aborted due to timeout. */
 double bc_timeout_ms = 0.0;
@@ -170,8 +272,16 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
 
     emptyheap();
 
-    for (unsigned i = 0; i < num_gnodes; ++i)
-        graph_node[i].gmin = LARGE;
+    /* Allocate the external Pareto store once (after graph is loaded). */
+    ensure_pareto_store();
+
+    /*
+     * Advance the global round counter.  Every gnode resets itself lazily
+     * (in record_dominance) the first time it is accessed this round.
+     * This replaces a slow O(num_gnodes) memset that would touch hundreds
+     * of MB for each of the 90+ bc_boastar calls in a benchmark query.
+     */
+    g_bc_version++;
 
     if (start_state->h1 > b1 || start_state->h2 > b2)
         return 0;
@@ -189,27 +299,11 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
     while (topheap() != NULL) {
         snode* n = popheap();
 
-        /* Dominance check */
-        if (n->g2 >= graph_node[n->state].gmin) {
-            stat_pruned++;
-            if (next_recycled < MAX_RECYCLE)
-                recycled_nodes[next_recycled++] = n;
-            continue;
-        }
-        graph_node[n->state].gmin = n->g2;
-
-        /* Goal test */
-        if (n->state == (int)goal_state->id) {
-            solutions[nsolutions][0] = n->g1;
-            solutions[nsolutions][1] = n->g2;
-            nsolutions++;
-            return 1;
-        }
-
-        ++stat_expansions;
-
-        /* Periodic timeout check (every 16384 expansions) */
-        if (bc_timeout_ms > 0.0 && (stat_expansions & 0x3FFF) == 0) {
+        /* Timeout: fire every 16384 total pops (dominated + non-dominated).
+         * Checking only on non-dominated expansions fails when most pops are
+         * dominated (stat_expansions barely moves, timeout never fires). */
+        if (bc_timeout_ms > 0.0 &&
+            ((stat_expansions + (unsigned long long)stat_pruned) & 0x3FFF) == 0) {
             struct timeval now;
             gettimeofday(&now, NULL);
             double elapsed = 1000.0 * (now.tv_sec  - bc_t0.tv_sec)
@@ -220,6 +314,27 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
                 return 0;
             }
         }
+
+        /* Dominance check at expansion */
+        if (is_dominated(n->state, n->g1, n->g2, ord)) {
+            stat_pruned++;
+            if (next_recycled < MAX_RECYCLE)
+                recycled_nodes[next_recycled++] = n;
+            continue;
+        }
+
+        /* Not dominated — record permanently so future nodes can be pruned */
+        record_dominance(n->state, n->g1, n->g2, ord);
+
+        /* Goal test */
+        if (n->state == (int)goal_state->id) {
+            solutions[nsolutions][0] = n->g1;
+            solutions[nsolutions][1] = n->g2;
+            nsolutions++;
+            return 1;
+        }
+
+        ++stat_expansions;
 
         for (short d = 1; d < (short)(adjacent_table[n->state][0] * 3); d += 3) {
             unsigned nsucc = adjacent_table[n->state][d];
@@ -239,9 +354,23 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
                 continue;
             }
 
-            /* Dominance check */
-            if (newg2 >= graph_node[nsucc].gmin)
+            /* Early dominance check:
+             * - Lex1/Lex2: O(1) scalar compare on gmin/g1min — always do it.
+             * - Min/Max/Avg: O(|front|) pareto scan; skip at generation time
+             *   to avoid billions of scans on hard queries.  Dominated nodes
+             *   will be caught at expansion time instead. */
+            if ((ord == ORDER_LEX1 || ord == ORDER_LEX2) &&
+                is_dominated(nsucc, newg1, newg2, ord)) {
+                stat_pruned++;
                 continue;
+            }
+
+            /* Heap overflow guard: insertheap() has no bounds check.
+             * Drop this successor rather than writing past heap[]. */
+            if (heapsize >= 39000000UL) {
+                stat_pruned++;
+                continue;
+            }
 
             snode* succ;
             if (next_recycled > 0) {

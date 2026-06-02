@@ -21,7 +21,14 @@ struct gnode // stores info needed for each graph node
   unsigned h1;
   unsigned h2;
   unsigned long long int key;
-  unsigned gmin;
+  unsigned gmin;      // min g2 expanded so far at this node (Lex1 dominance)
+  unsigned g1min;     // min g1 expanded so far at this node (Lex2 dominance)
+  /*
+   * version: set to the global g_bc_version the last time this node was
+   * touched by bc_boastar.  Allows O(1) lazy reset instead of an
+   * O(num_gnodes) loop at the start of every bc_boastar() call.
+   */
+  unsigned version;
   unsigned long heapindex;
   snode *gopfirst;
   snode *goplast;
