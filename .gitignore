@@ -1,0 +1,12 @@
+obj/*.o
+boa
+bod
+namoadr
+bpmx_boa
+.vscode/*
+.idea/
+Maps/*.txt
+.vs/
+./.idea/*
+*.suo
+*.user
