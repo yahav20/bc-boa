@@ -11,5 +11,9 @@ extern unsigned pred_adjacent_table[MAXNODES][MAXNEIGH];
 extern unsigned goal, start; 
 
 void call_boastar();
+void initialize_parameters();
+int  backward_dijkstra(int dim);
+int  boastar();
+void boastar_pool_reset(void);
 
 #endif

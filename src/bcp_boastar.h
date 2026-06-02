@@ -29,6 +29,23 @@ typedef enum {
     PIVOT_FBR = 4
 } PivotType;
 
+/* Timeout support: set before calling bc_boastar(); check after. */
+extern double bc_timeout_ms;
+extern int    bc_timed_out;
+
+/* Public API */
 void call_bc_boastar(OrderingFunction ord, PivotType pivot, int zone);
+
+void compute_map_extremes(unsigned long long *min1, unsigned long long *max2,
+                           unsigned long long *max1, unsigned long long *min2);
+
+int  bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
+                unsigned long long min1, unsigned long long max1,
+                unsigned long long min2, unsigned long long max2);
+
+void select_pivots(unsigned (*pof)[2], unsigned npof,
+                   unsigned long long min1, unsigned long long max1,
+                   unsigned long long min2, unsigned long long max2,
+                   double pivots[5][2]);
 
 #endif

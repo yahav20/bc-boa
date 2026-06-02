@@ -3,13 +3,14 @@
 // All rights reserved
 /////////////////////////////////////////////////////////////////////
 
-#include "heap.h"      // Heap operations for open/closed lists
-#include "node.h"      // Node structure definitions
-#include "include.h"   // General includes and macros
-#include "boastar.h"   // BOA* specific definitions
+#include "heap.h"
+#include "node.h"
+#include "include.h"
+#include "boastar.h"
+#include "pool.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/time.h>   // For timing (may not be portable to Windows)
+#include <sys/time.h>
 #include <unistd.h>
 #include <stdbool.h>
 
@@ -76,18 +77,20 @@ int backward_dijkstra(int dim) {
     return 1;
 }
 
-// Allocates and initializes a new snode (search node)
-snode* new_node() {
-    snode* state = (snode*)malloc(sizeof(snode));
-    state->heapindex = 0;
-    return state;
+/* File-static recycle pool — avoids the 8 MB stack array of the original code. */
+static snode* boa_recycled_nodes[MAX_RECYCLE];
+static int    boa_next_recycled = 0;
+
+/* Called by the benchmark before each query to invalidate stale pool pointers. */
+void boastar_pool_reset(void) {
+    boa_next_recycled = 0;
 }
 
 // Main BOA* search algorithm
 int boastar() {
-    snode* recycled_nodes[MAX_RECYCLE]; // For reusing pruned nodes
-    int next_recycled = 0;
+    boa_next_recycled = 0;
     nsolutions = 0;
+    minf_solution = LARGE;
     stat_pruned = 0;
 
     emptyheap(); // Clear open list
@@ -112,8 +115,8 @@ int boastar() {
         // Prune if dominated or not promising
         if (n->g2 >= graph_node[n->state].gmin || n->g2 + graph_node[n->state].h2 >= minf_solution) {
             stat_pruned++;
-            if (next_recycled < MAX_RECYCLE) {
-                recycled_nodes[next_recycled++] = n; // Save for reuse
+            if (boa_next_recycled < MAX_RECYCLE) {
+                boa_recycled_nodes[boa_next_recycled++] = n;
             }
             continue;
         }
@@ -158,8 +161,8 @@ int boastar() {
             newk2 = newg2 + h2;
 
             // Reuse pruned node if available
-            if (next_recycled > 0) {
-                succ = recycled_nodes[--next_recycled];
+            if (boa_next_recycled > 0) {
+                succ = boa_recycled_nodes[--boa_next_recycled];
                 stat_recycled++;
             }
             else {

@@ -2,7 +2,8 @@ obj/*.o
 boa
 bod
 namoadr
-bpmx_boa
+bcp_boastar
+benchmark
 .vscode/*
 .idea/
 Maps/*.txt
