@@ -71,6 +71,8 @@ typedef struct {
     int    solved;     /* queries where solution was found   */
     int    timed_out;  /* queries that hit the timeout       */
     int    n;          /* queries attempted                  */
+    double error_sum;  /* sum of BS quality error (ORDER_BS only) */
+    int    error_n;    /* queries where BS found a solution  */
 } Acc;
 
 /* Layout: [ordering 0..5][zone_idx 0..3][pivot_idx 0..4]
@@ -336,7 +338,7 @@ int main(int argc, char **argv)
 
         double pivots[5][2];
         select_pivots(pof, npof, min1, max1, min2, max2, pivots);
-        free(pof);
+        /* pof is kept alive through the BCP phase for BS quality measurement */
 
         /* Free BOA* search nodes — they are no longer needed.
          * This lets the pool be reused for the BCP-BOA* phase,
@@ -390,6 +392,29 @@ int main(int argc, char **argv)
                     a->timed_out += bc_timed_out;
                     a->n++;
 
+                    /* BS quality: find nearest POF point by normalised Euclidean distance,
+                     * then compute Error = (c1-p1)/p1 + (c2-p2)/p2 */
+                    if (ord == ORDER_BS && nsolutions > 0 && !bc_timed_out && npof > 0) {
+                        double range1 = (double)(max1 - min1);
+                        double range2 = (double)(max2 - min2);
+                        double c1 = (double)solutions[0][0];
+                        double c2 = (double)solutions[0][1];
+                        double best_dist = 1e18;
+                        int    best_i    = 0;
+                        for (unsigned pi2 = 0; pi2 < npof; pi2++) {
+                            double d1 = (c1 - (double)pof[pi2][0]) / range1;
+                            double d2 = (c2 - (double)pof[pi2][1]) / range2;
+                            double dist = d1*d1 + d2*d2;
+                            if (dist < best_dist) { best_dist = dist; best_i = (int)pi2; }
+                        }
+                        double p1  = (double)pof[best_i][0];
+                        double p2  = (double)pof[best_i][1];
+                        double err = (p1 > 0 ? (c1 - p1) / p1 : 0.0)
+                                   + (p2 > 0 ? (c2 - p2) / p2 : 0.0);
+                        a->error_sum += err;
+                        a->error_n++;
+                    }
+
                     total_combos_run++;
                     if (total_combos_run % 12 == 0 || total_combos_run == total_combos) {
                         printf("      ... %d/%d BCP runs completed\n", total_combos_run, total_combos);
@@ -398,6 +423,8 @@ int main(int argc, char **argv)
                 }
             }
         }
+
+        free(pof);   /* done with POF for this query */
 
         /* Per-query line */
         printf("Query %3d | setup %7.1f ms | BOA* exp=%llu gen=%llu sol=%u |",
@@ -474,6 +501,39 @@ int main(int argc, char **argv)
         avg_gen[oi][zi][pi] = a->n > 0 ? a->gen_sum / a->n / 1000.0 : 0;
     }
     print_table("GENERATED (avg, thousands)", avg_gen, results, "%.1f");
+
+    /* ---- BS Solution Quality table ---- */
+    static const char *piv_names_q[] = {"FTL","TL","MD","BR","FBR"};
+    static const int   zones_q[]     = {2,3,4,5};
+    printf("\n--- BS SOLUTION QUALITY: avg error = (c1-p1)/p1 + (c2-p2)/p2 ---\n");
+    printf("  (p1,p2) = nearest POF point by normalised Euclidean distance)\n");
+    printf("  0.00 = exact Pareto point found;  N/A = no solution\n\n");
+    printf("%-8s", "Zone");
+    for (int zi = 0; zi < 3; zi++)
+        for (int pi = 0; pi < N_PIV; pi++)
+            printf(" Z%d:%-5s", zones_q[zi], piv_names_q[pi]);
+    printf(" %-8s\n", "Z5:Any");
+    hline(8 + (3*N_PIV+1)*8);
+    {
+        int oi = (int)ORDER_BS;
+        printf("%-8s", "BS");
+        for (int zi = 0; zi < 3; zi++) {
+            for (int pi = 0; pi < N_PIV; pi++) {
+                Acc *a = &results[oi][zi][pi];
+                if (a->error_n > 0)
+                    printf(" %7.4f", a->error_sum / a->error_n);
+                else
+                    printf(" %7s", "N/A");
+            }
+        }
+        {
+            Acc *a = &results[oi][3][0];
+            if (a->error_n > 0)
+                printf(" %7.4f\n", a->error_sum / a->error_n);
+            else
+                printf(" %7s\n", "N/A");
+        }
+    }
 
     printf("\n");
     return 0;
