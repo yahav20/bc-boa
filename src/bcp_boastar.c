@@ -59,14 +59,20 @@ typedef struct { unsigned g1; unsigned g2; } ParetoPoint;
 
 static ParetoPoint *g_pareto_store = NULL; /* [num_gnodes * MAX_PARETO_PER_NODE] */
 static unsigned    *g_pareto_count = NULL; /* [num_gnodes] */
+static double      *g_best_S       = NULL; /* [num_gnodes] best S score seen (ORDER_BS) */
+
+/* Bounds used by ORDER_BS; set at the start of every bc_boastar() call. */
+static unsigned bc_b1_static = 1;
+static unsigned bc_b2_static = 1;
 
 static void ensure_pareto_store(void) {
     if (g_pareto_store != NULL) return;
     g_pareto_store = (ParetoPoint*)calloc((size_t)num_gnodes * MAX_PARETO_PER_NODE,
                                            sizeof(ParetoPoint));
     g_pareto_count = (unsigned*)calloc(num_gnodes, sizeof(unsigned));
-    if (!g_pareto_store || !g_pareto_count) {
-        fprintf(stderr, "bc_boastar: failed to allocate Pareto store (%u nodes)\n",
+    g_best_S       = (double*)malloc((size_t)num_gnodes * sizeof(double));
+    if (!g_pareto_store || !g_pareto_count || !g_best_S) {
+        fprintf(stderr, "bc_boastar: failed to allocate dominance memory (%u nodes)\n",
                 num_gnodes);
         exit(1);
     }
@@ -78,6 +84,8 @@ static inline void lazy_reset(gnode *n, unsigned state_id) {
     n->g1min    = LARGE;
     if (g_pareto_store)
         g_pareto_count[state_id] = 0;
+    if (g_best_S)
+        g_best_S[state_id] = 1e9;
 }
 
 /*
@@ -94,6 +102,16 @@ static int is_dominated(unsigned state_id, unsigned g1, unsigned g2, OrderingFun
 
     if (ord == ORDER_LEX1) return (g2 >= n->gmin);
     if (ord == ORDER_LEX2) return (g1 >= n->g1min);
+
+    /* BS: O(1) single-label dominance */
+    if (ord == ORDER_BS && g_best_S) {
+        double F1 = (double)(g1 + n->h1) / (double)bc_b1_static;
+        double F2 = (double)(g2 + n->h2) / (double)bc_b2_static;
+        double denom = F1 + F2;
+        if (denom <= 0.0) return 0;
+        double S = (F1*F1 + F2*F2) / denom;
+        return (S >= g_best_S[state_id]);
+    }
 
     /* Min / Max / Avg */
     ParetoPoint *front = g_pareto_store + (size_t)state_id * MAX_PARETO_PER_NODE;
@@ -117,6 +135,18 @@ static void record_dominance(unsigned state_id, unsigned g1, unsigned g2, Orderi
 
     if (ord == ORDER_LEX1) { if (g2 < n->gmin)  n->gmin  = g2; return; }
     if (ord == ORDER_LEX2) { if (g1 < n->g1min) n->g1min = g1; return; }
+
+    /* BS: store only the best S seen — O(1) update */
+    if (ord == ORDER_BS && g_best_S) {
+        double F1 = (double)(g1 + n->h1) / (double)bc_b1_static;
+        double F2 = (double)(g2 + n->h2) / (double)bc_b2_static;
+        double denom = F1 + F2;
+        if (denom > 0.0) {
+            double S = (F1*F1 + F2*F2) / denom;
+            if (S < g_best_S[state_id]) g_best_S[state_id] = S;
+        }
+        return;
+    }
 
     /* Min / Max / Avg: maintain true Pareto front. */
     ParetoPoint *front = g_pareto_store + (size_t)state_id * MAX_PARETO_PER_NODE;
@@ -143,9 +173,6 @@ static void record_dominance(unsigned state_id, unsigned g1, unsigned g2, Orderi
 double bc_timeout_ms = 0.0;
 int    bc_timed_out  = 0;
 
-/* Bounds used by ORDER_BS key computation; set at the start of bc_boastar(). */
-static unsigned bc_b1_static = 1;
-static unsigned bc_b2_static = 1;
 
 /* -----------------------------------------------------------------------
  * Compute the key for a node given an ordering function.
@@ -376,7 +403,7 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
              * - Min/Max/Avg: O(|front|) pareto scan; skip at generation time
              *   to avoid billions of scans on hard queries.  Dominated nodes
              *   will be caught at expansion time instead. */
-            if ((ord == ORDER_LEX1 || ord == ORDER_LEX2) &&
+            if ((ord == ORDER_LEX1 || ord == ORDER_LEX2 || ord == ORDER_BS) &&
                 is_dominated(nsucc, newg1, newg2, ord)) {
                 stat_pruned++;
                 continue;
