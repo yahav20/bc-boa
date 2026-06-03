@@ -18,7 +18,8 @@ typedef enum {
     ORDER_SEL_LEX = 2,
     ORDER_MIN     = 3,
     ORDER_MAX     = 4,
-    ORDER_AVG     = 5
+    ORDER_AVG     = 5,
+    ORDER_BS      = 6   /* Budget Score: S = (F1²+F2²)/(F1+F2), F1=f1/b1, F2=f2/b2 */
 } OrderingFunction;
 
 typedef enum {

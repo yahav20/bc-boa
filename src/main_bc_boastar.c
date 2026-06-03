@@ -18,7 +18,8 @@ static OrderingFunction parse_ordering(const char *s) {
     if (strcmp(s, "min")    == 0) return ORDER_MIN;
     if (strcmp(s, "max")    == 0) return ORDER_MAX;
     if (strcmp(s, "avg")    == 0) return ORDER_AVG;
-    fprintf(stderr, "Unknown ordering '%s'. Use: lex1 lex2 sellex min max avg\n", s);
+    if (strcmp(s, "bs")     == 0) return ORDER_BS;
+    fprintf(stderr, "Unknown ordering '%s'. Use: lex1 lex2 sellex min max avg bs\n", s);
     exit(1);
 }
 

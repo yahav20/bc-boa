@@ -75,7 +75,7 @@ typedef struct {
 
 /* Layout: [ordering 0..5][zone_idx 0..3][pivot_idx 0..4]
  * zone_idx: 0=Z2, 1=Z3, 2=Z4, 3=Z5   (Z5 uses only pivot_idx=0) */
-#define N_ORD   6
+#define N_ORD   7
 #define N_ZONES 4
 #define N_PIV   5
 
@@ -131,7 +131,7 @@ static void print_table(const char *title, double metric[N_ORD][N_ZONES][N_PIV],
                          const char *fmt)
 {
     static const char *ord_names[] =
-        {"Lex1","Lex2","Sel-Lex","Min","Max","Average"};
+        {"Lex1","Lex2","Sel-Lex","Min","Max","Average","BS"};
     static const char *piv_names[] = {"FTL","TL","MD","BR","FBR"};
     static const int   zones[]     = {2,3,4,5};
 

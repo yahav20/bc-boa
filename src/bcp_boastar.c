@@ -143,6 +143,10 @@ static void record_dominance(unsigned state_id, unsigned g1, unsigned g2, Orderi
 double bc_timeout_ms = 0.0;
 int    bc_timed_out  = 0;
 
+/* Bounds used by ORDER_BS key computation; set at the start of bc_boastar(). */
+static unsigned bc_b1_static = 1;
+static unsigned bc_b2_static = 1;
+
 /* -----------------------------------------------------------------------
  * Compute the key for a node given an ordering function.
  * SEL_LEX must be resolved to LEX1 or LEX2 before calling.
@@ -180,6 +184,16 @@ static double compute_key(unsigned f1, unsigned f2, OrderingFunction ord,
         fmin = nf1 < nf2 ? nf1 : nf2;
         favg = (nf1 + nf2) / 2.0;
         return favg * (double)BASE + fmin;
+
+    case ORDER_BS: {
+        double F1    = (double)f1 / (double)bc_b1_static;
+        double F2    = (double)f2 / (double)bc_b2_static;
+        double denom = F1 + F2;
+        if (denom <= 0.0) return 0.0;
+        double S     = (F1*F1 + F2*F2) / denom;  /* = a·F1 + (1-a)·F2 */
+        double fmin2 = F1 < F2 ? F1 : F2;
+        return S * (double)BASE + fmin2;
+    }
 
     default:
         return (double)f1 * (double)BASE + (double)f2;
@@ -269,6 +283,9 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
     stat_recycled   = 0;
     stat_created    = 0;
     bc_timed_out    = 0;
+
+    bc_b1_static = (b1 > 0) ? b1 : 1;
+    bc_b2_static = (b2 > 0) ? b2 : 1;
 
     emptyheap();
 
@@ -470,6 +487,7 @@ static const char* ordering_name(OrderingFunction ord) {
     case ORDER_MIN:     return "Min";
     case ORDER_MAX:     return "Max";
     case ORDER_AVG:     return "Average";
+    case ORDER_BS:      return "BS";
     default:            return "?";
     }
 }
