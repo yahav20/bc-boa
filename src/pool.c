@@ -13,4 +13,5 @@ snode* new_node(void) {
     return n;
 }
 
-void pool_reset(void) { /* no-op for malloc version */ }
+void pool_reset(void)    { /* no-op for malloc version */ }
+void pool_free_all(void) { /* no-op for malloc version */ }

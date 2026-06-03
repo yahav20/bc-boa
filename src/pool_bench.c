@@ -13,7 +13,7 @@
 #define CHUNK_NODES 1000000   /* nodes per slab (~56 MB each) */
 #endif
 #ifndef MAX_CHUNKS
-#define MAX_CHUNKS 64         /* cap at 64 M nodes total */
+#define MAX_CHUNKS 256        /* allocated on demand; actual peak depends on query difficulty */
 #endif
 
 static snode  *chunks[MAX_CHUNKS];
@@ -57,7 +57,19 @@ snode* new_node(void) {
 }
 
 void pool_reset(void) {
-    /* Rewind to start of first chunk; keep all slabs allocated */
+    /* Rewind to start of first chunk; keep all slabs allocated for reuse */
+    cur_chunk = 0;
+    cur_idx   = 0;
+}
+
+void pool_free_all(void) {
+    /* Free every allocated chunk and reset all counters.
+     * Call between queries so each query's peak is independent. */
+    for (int i = 0; i < n_chunks; i++) {
+        free(chunks[i]);
+        chunks[i] = NULL;
+    }
+    n_chunks  = 0;
     cur_chunk = 0;
     cur_idx   = 0;
 }

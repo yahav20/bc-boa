@@ -108,7 +108,7 @@ static void zone_bounds(int zone, double px, double py,
  * Reset all node-pool and heap state between queries.
  * ----------------------------------------------------------------------- */
 static void reset_for_query(void) {
-    pool_reset();
+    pool_free_all();     /* release all chunks so each query's peak is independent */
     boastar_pool_reset();
     next_recycled = 0;
 }
@@ -314,7 +314,8 @@ int main(int argc, char **argv)
             continue;
         }
         
-        printf("  -> BOA* baseline done: %u solutions. Running 96 BCP combinations...\n", nsolutions);
+        printf("  -> BOA* baseline done: %u solutions. Running %d BCP combinations...\n",
+               nsolutions, N_ORD * (3 * N_PIV + 1));
         fflush(stdout);
 
         double  boa_exp = (double)stat_expansions;
@@ -346,6 +347,8 @@ int main(int argc, char **argv)
         next_recycled = 0;
 
         /* --- Phase 3: BCP-BOA* for all combinations --- */
+        /* Z2,Z3,Z4 × N_PIV pivots + Z5 × 1 pivot, for each of N_ORD orderings */
+        const int total_combos = N_ORD * (3 * N_PIV + 1);
         int total_combos_run = 0;
         static const int zones[] = {2, 3, 4, 5};
         for (int zi = 0; zi < N_ZONES; zi++) {
@@ -388,8 +391,8 @@ int main(int argc, char **argv)
                     a->n++;
 
                     total_combos_run++;
-                    if (total_combos_run % 12 == 0 || total_combos_run == 96) {
-                        printf("      ... %d/96 BCP runs completed\n", total_combos_run);
+                    if (total_combos_run % 12 == 0 || total_combos_run == total_combos) {
+                        printf("      ... %d/%d BCP runs completed\n", total_combos_run, total_combos);
                         fflush(stdout);
                     }
                 }
