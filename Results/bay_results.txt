@@ -54,13 +54,12 @@ Processing query   4/10  (151157 -> 220839) ...
       ... 84/112 BCP runs completed
       ... 96/112 BCP runs completed
       ... 108/112 BCP runs completed
-
       ... 112/112 BCP runs completed
-Query   4 | setup   160.4 ms | BOA* exp=593158 gen=750037 sol=203 | Lex1/MD/Z4: exp=13763
-Processing query   5/10  (41820 -> 197615) ...
-  -> BOA* baseline done: 175 solutions. Running 112 BCP combinations...
+Query   4 | setup   190.4 ms | BOA* exp=930274 gen=1149026 sol=353 | Lex1/MD/Z4: exp=26345
+Processing query   5/10  (151157 -> 220839) ...
+  -> BOA* baseline done: 203 solutions. Running 112 BCP combinations...
       ... 12/112 BCP runs completed
-      ... 24/112 BCP runs completed
+     ... 24/112 BCP runs completed
       ... 36/112 BCP runs completed
       ... 48/112 BCP runs completed
       ... 60/112 BCP runs completed
