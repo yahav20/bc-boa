@@ -206,12 +206,13 @@ static void print_table(const char *title, double metric[N_ORD][N_ZONES][N_PIV],
  * ----------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
-    if (argc != 4) {
+    if (argc < 4 || argc > 5) {
         fprintf(stderr,
-            "Usage: %s <map_file> <num_queries> <timeout_sec>\n"
+            "Usage: %s <map_file> <num_queries> <timeout_sec> [start_query]\n"
             "  map_file     : e.g. Maps/BAY-road-d.txt\n"
-            "  num_queries  : how many queries to run (<=50 for standard files)\n"
-            "  timeout_sec  : seconds allowed per ordering per query\n",
+            "  num_queries  : how many queries to run in this chunk\n"
+            "  timeout_sec  : seconds allowed per ordering per query\n"
+            "  start_query  : 0-indexed offset into query file (default 0)\n",
             argv[0]);
         return 1;
     }
@@ -220,6 +221,7 @@ int main(int argc, char **argv)
     int         num_qry    = atoi(argv[2]);
     double      timeout_s  = atof(argv[3]);
     double      timeout_ms = timeout_s * 1000.0;
+    int         start_query = (argc >= 5) ? atoi(argv[4]) : 0;
 
     /* ---- Derive query file name from map file name ---- */
     /* "Maps/BAY-road-d.txt"  ->  prefix "BAY"
@@ -254,23 +256,30 @@ int main(int argc, char **argv)
 
     unsigned queries[50][2];
     int nq = 0;
-    while (nq < 50 && nq < num_qry &&
+    while (nq < 50 &&
            fscanf(qf, "%u %u", &queries[nq][0], &queries[nq][1]) == 2)
         nq++;
     fclose(qf);
 
     if (nq == 0) { fprintf(stderr, "No queries read.\n"); return 1; }
-    if (nq < num_qry) {
-        fprintf(stderr, "Warning: only %d queries available (requested %d).\n",
-                nq, num_qry);
-        num_qry = nq;
+    if (start_query < 0 || start_query >= nq) {
+        fprintf(stderr, "Error: start_query=%d out of range (file has %d queries).\n",
+                start_query, nq);
+        return 1;
+    }
+    if (start_query + num_qry > nq) {
+        int avail = nq - start_query;
+        fprintf(stderr, "Warning: only %d queries available from offset %d (requested %d).\n",
+                avail, start_query, num_qry);
+        num_qry = avail;
     }
 
     /* ---- Header ---- */
     printf("=================================================================\n");
     printf("BCP-BOA* Benchmark\n");
     printf("Map   : %s (%u nodes)\n", map_file, num_gnodes);
-    printf("Queries: %d  |  Timeout/ordering: %.1f s\n", num_qry, timeout_s);
+    printf("Queries: %d (file indices %d-%d)  |  Timeout/ordering: %.1f s\n",
+           num_qry, start_query+1, start_query+num_qry, timeout_s);
     printf("Query file: %s\n", query_file);
     printf("=================================================================\n\n");
 
@@ -278,14 +287,15 @@ int main(int argc, char **argv)
     memset(results, 0, sizeof(results));
 
     /* ---- Main query loop ---- */
-    for (int qi = 0; qi < num_qry; qi++) {
+    for (int qi = start_query; qi < start_query + num_qry; qi++) {
         start = queries[qi][0] - 1;   /* file is 1-indexed */
         goal  = queries[qi][1] - 1;
 
         reset_for_query();
 
-        printf("Processing query %3d/%d  (%u -> %u) ...\n",
-               qi+1, num_qry, queries[qi][0], queries[qi][1]);
+        int chunk_i = qi - start_query + 1;
+        printf("Processing query %3d/%d  (file #%d: %u -> %u) ...\n",
+               chunk_i, num_qry, qi+1, queries[qi][0], queries[qi][1]);
         fflush(stdout);
 
         /* Reset gmin for boastar() — g1min/pareto are handled lazily by bc_boastar */
@@ -311,7 +321,7 @@ int main(int argc, char **argv)
         double setup_ms = ms_diff(t0, t1);
 
         if (nsolutions == 0 || max1 == min1 || max2 == min2) {
-            printf("Query %3d: skipped (trivial or no solution)\n", qi+1);
+            printf("Query %3d: skipped (trivial or no solution)\n", chunk_i);
             n_queries_skip++;
             continue;
         }
@@ -428,7 +438,7 @@ int main(int argc, char **argv)
 
         /* Per-query line */
         printf("Query %3d | setup %7.1f ms | BOA* exp=%llu gen=%llu sol=%u |",
-               qi+1, setup_ms,
+               chunk_i, setup_ms,
                (unsigned long long)boa_exp,
                (unsigned long long)boa_gen, boa_sol);
         /* Show Lex1/MD/Z4 as a representative */
@@ -536,5 +546,44 @@ int main(int argc, char **argv)
     }
 
     printf("\n");
+
+    /* ---- Append raw sums to CSV for cross-chunk aggregation ---- */
+    {
+        char csv_file[256];
+        snprintf(csv_file, sizeof(csv_file), "%s_chunks.csv", prefix);
+
+        /* Write header only if file is new/empty */
+        int write_header = 0;
+        FILE *tf = fopen(csv_file, "r");
+        if (!tf) { write_header = 1; } else { fclose(tf); }
+
+        FILE *cf = fopen(csv_file, "a");
+        if (!cf) {
+            fprintf(stderr, "Warning: cannot write chunk CSV to %s\n", csv_file);
+        } else {
+            if (write_header) {
+                fprintf(cf, "# boa_stats: type,map,start_q,n,boa_exp_sum,boa_gen_sum,boa_sol_sum,setup_time_sum\n");
+                fprintf(cf, "# bcp_stats: type,map,start_q,ord_i,zone_i,piv_i,exp_sum,gen_sum,prune_sum,time_sum,bbar1_sum,bbar2_sum,solved,timed_out,n,error_sum,error_n\n");
+            }
+            fprintf(cf, "boa_stats,%s,%d,%d,%.0f,%.0f,%.0f,%.4f\n",
+                    prefix, start_query, n_queries_run,
+                    boa_exp_sum, boa_gen_sum, boa_sol_sum, setup_time_sum);
+            for (int oi = 0; oi < N_ORD; oi++)
+            for (int zi = 0; zi < N_ZONES; zi++)
+            for (int pi = 0; pi < N_PIV; pi++) {
+                Acc *a = &results[oi][zi][pi];
+                if (a->n == 0) continue;
+                fprintf(cf, "bcp_stats,%s,%d,%d,%d,%d,%.0f,%.0f,%.0f,%.6f,%.8f,%.8f,%d,%d,%d,%.10f,%d\n",
+                        prefix, start_query, oi, zi, pi,
+                        a->exp_sum, a->gen_sum, a->prune_sum, a->time_sum,
+                        a->bbar1_sum, a->bbar2_sum,
+                        a->solved, a->timed_out, a->n,
+                        a->error_sum, a->error_n);
+            }
+            fclose(cf);
+            printf("Chunk data appended to: %s\n", csv_file);
+        }
+    }
+
     return 0;
 }
