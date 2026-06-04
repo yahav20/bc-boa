@@ -4,6 +4,7 @@ bod
 namoadr
 bcp_boastar
 benchmark
+*.log
 .vscode/*
 .idea/
 Maps/*.txt
