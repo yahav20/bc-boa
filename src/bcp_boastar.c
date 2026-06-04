@@ -53,7 +53,7 @@ static unsigned g_bc_version = 0;
  * g_pareto_store / g_pareto_count are allocated lazily on the first
  * bc_boastar() call after the graph has been loaded.
  */
-#define MAX_PARETO_PER_NODE 200
+#define MAX_PARETO_PER_NODE 64
 
 typedef struct { unsigned g1; unsigned g2; } ParetoPoint;
 
@@ -410,8 +410,10 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
             }
 
             /* Heap overflow guard: insertheap() has no bounds check.
-             * Drop this successor rather than writing past heap[]. */
-            if (heapsize >= 39000000UL) {
+             * Drop this successor rather than writing past heap[].
+             * 2M is 5× the paper's worst-case BCP expansion; any larger search
+             * is going to time out anyway, so cutting it here saves memory. */
+            if (heapsize >= 2000000UL) {
                 stat_pruned++;
                 continue;
             }
