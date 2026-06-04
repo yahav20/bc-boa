@@ -51,10 +51,10 @@ Processing query   4/10  (151157 -> 220839) ...
       ... 48/112 BCP runs completed
       ... 60/112 BCP runs completed
       ... 72/112 BCP runs completed
-
       ... 84/112 BCP runs completed
       ... 96/112 BCP runs completed
       ... 108/112 BCP runs completed
+
       ... 112/112 BCP runs completed
 Query   4 | setup   160.4 ms | BOA* exp=593158 gen=750037 sol=203 | Lex1/MD/Z4: exp=13763
 Processing query   5/10  (41820 -> 197615) ...
