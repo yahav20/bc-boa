@@ -1,170 +1,210 @@
 =================================================================
 BCP-BOA* Benchmark
-Map   : Maps/NY-road-d.txt (264346 nodes)
-Queries: 7  |  Timeout/ordering: 30.0 s
+Map   : Maps/NY-road-d.txt (264346 nodes)
+Queries: 10  |  Timeout/ordering: 30.0 s
 Query file: Queries/NY-queries
 =================================================================
 
-Processing query   1/7  (33502 -> 163335) ...
-  -> BOA* baseline done: 45 solutions. Running 112 BCP combinations...
-      ... 12/112 BCP runs completed
-      ... 24/112 BCP runs completed
-      ... 36/112 BCP runs completed
-      ... 48/112 BCP runs completed
-      ... 60/112 BCP runs completed
-      ... 72/112 BCP runs completed
-      ... 84/112 BCP runs completed
-      ... 96/112 BCP runs completed
-      ... 108/112 BCP runs completed
-      ... 112/112 BCP runs completed
-Query   1 | setup    61.4 ms | BOA* exp=10871 gen=13856 sol=45 | Lex1/MD/Z4: exp=1296
-Processing query   2/7  (198561 -> 195430) ...
-  -> BOA* baseline done: 12 solutions. Running 112 BCP combinations...
-      ... 12/112 BCP runs completed
-      ... 24/112 BCP runs completed
-      ... 36/112 BCP runs completed
-      ... 48/112 BCP runs completed
-      ... 60/112 BCP runs completed
-      ... 72/112 BCP runs completed
-      ... 84/112 BCP runs completed
-      ... 96/112 BCP runs completed
-      ... 108/112 BCP runs completed
-      ... 112/112 BCP runs completed
-Query   2 | setup    34.7 ms | BOA* exp=774 gen=1185 sol=12 | Lex1/MD/Z4: exp=143
-Processing query   3/7  (40851 -> 4310) ...
-  -> BOA* baseline done: 344 solutions. Running 112 BCP combinations...
-      ... 12/112 BCP runs completed
-      ... 24/112 BCP runs completed
-      ... 36/112 BCP runs completed
-      ... 48/112 BCP runs completed
-      ... 60/112 BCP runs completed
-      ... 72/112 BCP runs completed
-      ... 84/112 BCP runs completed
-      ... 96/112 BCP runs completed
-      ... 108/112 BCP runs completed
-      ... 112/112 BCP runs completed
-Query   3 | setup   464.1 ms | BOA* exp=2354517 gen=3076135 sol=344 | Lex1/MD/Z4: exp=27741
-Processing query   4/7  (19103 -> 95503) ...
-  -> BOA* baseline done: 24 solutions. Running 112 BCP combinations...
-      ... 12/112 BCP runs completed
-      ... 24/112 BCP runs completed
-      ... 36/112 BCP runs completed
-      ... 48/112 BCP runs completed
-      ... 60/112 BCP runs completed
-      ... 72/112 BCP runs completed
-      ... 84/112 BCP runs completed
-      ... 96/112 BCP runs completed
-      ... 108/112 BCP runs completed
-      ... 112/112 BCP runs completed
-Query   4 | setup    46.8 ms | BOA* exp=5131 gen=7735 sol=24 | Lex1/MD/Z4: exp=531
-Processing query   5/7  (65190 -> 57030) ...
-Query   5: skipped (trivial or no solution)
-Processing query   6/7  (172882 -> 189944) ...
-  -> BOA* baseline done: 163 solutions. Running 112 BCP combinations...
-      ... 12/112 BCP runs completed
-      ... 24/112 BCP runs completed
-      ... 36/112 BCP runs completed
-      ... 48/112 BCP runs completed
-      ... 60/112 BCP runs completed
-      ... 72/112 BCP runs completed
-      ... 84/112 BCP runs completed
-      ... 96/112 BCP runs completed
-      ... 108/112 BCP runs completed
-      ... 112/112 BCP runs completed
-Query   6 | setup    66.3 ms | BOA* exp=197523 gen=261895 sol=163 | Lex1/MD/Z4: exp=8222
-Processing query   7/7  (181176 -> 151910) ...
-  -> BOA* baseline done: 308 solutions. Running 112 BCP combinations...
-      ... 12/112 BCP runs completed
-      ... 24/112 BCP runs completed
-      ... 36/112 BCP runs completed
-      ... 48/112 BCP runs completed
-      ... 60/112 BCP runs completed
-      ... 72/112 BCP runs completed
-      ... 84/112 BCP runs completed
-      ... 96/112 BCP runs completed
-      ... 108/112 BCP runs completed
-      ... 112/112 BCP runs completed
-Query   7 | setup    86.0 ms | BOA* exp=319665 gen=448277 sol=308 | Lex1/MD/Z4: exp=8480
+Processing query   1/10  (33502 -> 163335) ...
+  -> BOA* baseline done: 45 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query   1 | setup    64.4 ms | BOA* exp=10871 gen=13856 sol=45 | Lex1/MD/Z4: exp=1296
+Processing query   2/10  (198561 -> 195430) ...
+  -> BOA* baseline done: 12 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query   2 | setup    40.8 ms | BOA* exp=774 gen=1185 sol=12 | Lex1/MD/Z4: exp=143
+Processing query   3/10  (40850 -> 520) ...
+  -> BOA* baseline done: 229 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query   3 | setup   198.0 ms | BOA* exp=661176 gen=936053 sol=229 | Lex1/MD/Z4: exp=9176
+Processing query   4/10  (19103 -> 95503) ...
+  -> BOA* baseline done: 24 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query   4 | setup    47.4 ms | BOA* exp=5131 gen=7735 sol=24 | Lex1/MD/Z4: exp=531
+Processing query   5/10  (65190 -> 57030) ...
+Query   5: skipped (trivial or no solution)
+Processing query   6/10  (172882 -> 189944) ...
+  -> BOA* baseline done: 163 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query   6 | setup    65.0 ms | BOA* exp=197523 gen=261895 sol=163 | Lex1/MD/Z4: exp=8222
+Processing query   7/10  (181176 -> 15191) ...
+  -> BOA* baseline done: 33 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query   7 | setup    51.2 ms | BOA* exp=13109 gen=16073 sol=33 | Lex1/MD/Z4: exp=2030
+Processing query   8/10  (177414 -> 103345) ...
+  -> BOA* baseline done: 122 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query   8 | setup    76.6 ms | BOA* exp=177192 gen=264303 sol=122 | Lex1/MD/Z4: exp=8515
+Processing query   9/10  (186166 -> 71968) ...
+  -> BOA* baseline done: 487 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query   9 | setup   523.6 ms | BOA* exp=2399749 gen=3510839 sol=487 | Lex1/MD/Z4: exp=19920
+Processing query  10/10  (50616 -> 76333) ...
+  -> BOA* baseline done: 31 solutions. Running 112 BCP combinations...
+      ... 12/112 BCP runs completed
+      ... 24/112 BCP runs completed
+      ... 36/112 BCP runs completed
+      ... 48/112 BCP runs completed
+      ... 60/112 BCP runs completed
+      ... 72/112 BCP runs completed
+      ... 84/112 BCP runs completed
+      ... 96/112 BCP runs completed
+      ... 108/112 BCP runs completed
+      ... 112/112 BCP runs completed
+Query  10 | setup    61.5 ms | BOA* exp=10660 gen=15587 sol=31 | Lex1/MD/Z4: exp=892
 
 =================================================================
-SUMMARY (6/7 queries completed, 1 skipped)
+SUMMARY (9/10 queries completed, 1 skipped)
 =================================================================
 
---- BOA* BASELINE (avg over 6 queries) ---
-  Setup (heuristic+BOA*) time :  126.57 ms
-  BOA* states expanded        :  481414
-  BOA* states generated       :  634847
-  POF solutions found         :   149.3
+--- BOA* BASELINE (avg over 9 queries) ---
+  Setup (heuristic+BOA*) time :  125.38 ms
+  BOA* states expanded        :  386243
+  BOA* states generated       :  558614
+  POF solutions found         :   127.3
 
 --- EXPANSIONS (avg, thousands) ---
-Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
-b1(avg)        0.25     0.37     0.53     0.76     1.00     0.50     0.58     0.69     0.84     1.00     0.75     0.79     0.84     0.92     1.00     1.00
-b2(avg)        1.00     0.71     0.53     0.34     0.25     1.00     0.81     0.69     0.56     0.50     1.00     0.90     0.84     0.78     0.75     1.00
+Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
+b1(avg)        0.25     0.33     0.48     0.74     1.00     0.50     0.55     0.65     0.83     1.00     0.75     0.78     0.83     0.91     1.00     1.00
+b2(avg)        1.00     0.70     0.49     0.32     0.25     1.00     0.80     0.66     0.55     0.50     1.00     0.90     0.83     0.77     0.75     1.00
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
-Lex1            0.3     23.0    141.1    234.9    156.7      0.3      8.8     47.5    133.6    208.1      0.3      1.4      6.6     15.8     26.8      0.3
-Lex2          155.3    234.4    176.2     22.0      0.3    202.5    145.7     41.0      6.3      0.3     21.7     12.9      5.9      1.8      0.3      0.3
-Sel-Lex         0.3     23.0    133.4     22.0      0.3      0.3      8.8     44.0      6.3      0.3      0.3      1.4      7.8      1.8      0.3      0.3
-Min             0.4     29.7    224.6     40.5      0.4      0.5     12.4     76.4     13.0      0.5      0.5      2.2     10.0      4.0      0.5      0.6
-Max           155.5    234.6    249.7    235.1    156.9    249.7    249.7    249.7    249.7    249.7    249.7    249.7    249.7    249.7    249.7    249.7
-Average       166.3    279.8    357.7    283.6    171.1    345.8    373.3    384.8    376.7    367.5    386.0    386.1    386.1    386.1    385.9    386.1
-BS              4.9      6.8      8.8      8.0      5.1      8.2      8.6      8.5      6.8      6.3      8.0      7.6      7.5      7.4      7.2      7.7
+Lex1            0.4     31.0    164.1    119.1    111.6      0.4      8.0     36.8     98.2    118.3      0.4      5.0      6.8     17.6     20.1      0.4
+Lex2          115.8     59.5     29.7      4.8      0.4     20.7     17.0      7.6      2.6      0.4      2.8      2.6      2.6      1.5      0.4      0.4
+Sel-Lex         0.4     31.0    163.2      4.8      0.4      0.4      8.0     34.0      2.6      0.4      0.4      5.0      6.1      1.5      0.4      0.4
+Min             0.5     37.0   2680.4      8.1      0.5      0.6      9.5     11.2      4.6      0.5      0.7      3.9      4.5      2.2      0.6      0.8
+Max          2758.9   1477.8   2738.1   4298.6   8249.6   1487.7   1487.7   1487.7   1487.7   1487.7   1487.7   1487.7   1487.7   1487.7   1487.7   1487.7
+Average      2146.5   2292.8   6106.0   3754.9   4410.2   5977.1   6145.5   6950.3   7782.7   7856.8   8246.0   8018.6   7947.1   7986.6   7927.4   7925.7
+BS              6.3      5.9      5.7      6.7      3.6      7.2      6.5      5.6      4.7      4.4      5.8      5.5      5.4      5.2      5.1      5.6
 
 --- SEARCH TIME (avg, ms) ---
-Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
-b1(avg)        0.25     0.37     0.53     0.76     1.00     0.50     0.58     0.69     0.84     1.00     0.75     0.79     0.84     0.92     1.00     1.00
-b2(avg)        1.00     0.71     0.53     0.34     0.25     1.00     0.81     0.69     0.56     0.50     1.00     0.90     0.84     0.78     0.75     1.00
+Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
+b1(avg)        0.25     0.33     0.48     0.74     1.00     0.50     0.55     0.65     0.83     1.00     0.75     0.78     0.83     0.91     1.00     1.00
+b2(avg)        1.00     0.70     0.49     0.32     0.25     1.00     0.80     0.66     0.55     0.50     1.00     0.90     0.83     0.77     0.75     1.00
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
-Lex1            0.0      3.1     22.2     37.7     20.7      0.0      1.0      6.7     21.0     32.5      0.0      0.1      0.7      1.9      3.5      0.0
-Lex2           18.9     33.2     26.4      2.9      0.0     29.6     23.1      5.6      0.7      0.0      2.8      1.6      0.7      0.2      0.0      0.0
-Sel-Lex         0.0      3.0     21.0      2.8      0.0      0.0      1.0      5.9      0.6      0.0      0.0      0.1      0.8      0.1      0.0      0.0
-Min             0.2     10.1    150.1     14.4      0.0      0.1      2.8     27.6      3.0      0.0      0.1      0.3      2.1      0.6      0.0      0.1
-Max            54.8    118.3    125.1    118.5     56.3    107.9    107.6    107.9    107.8    108.6    111.4    113.0    113.9    110.1    115.2    129.6
-Average        67.8    136.2    211.7    153.9     63.1    173.7    205.0    221.1    208.6    198.3    214.6    218.2    231.9    238.7    220.8    232.5
-BS              0.6      0.9      1.4      1.3      0.7      1.3      1.4      1.5      1.2      1.0      1.3      1.3      1.3      1.3      1.2      1.3
+Lex1            0.1      4.5     30.7     17.8     16.9      0.0      0.9      5.5     17.0     21.4      0.0      0.5      0.7      2.3      2.6      0.0
+Lex2           16.2      8.0      3.9      0.6      0.0      2.6      2.1      0.9      0.3      0.1      0.3      0.3      0.3      0.1      0.0      0.0
+Sel-Lex         0.0      4.3     31.0      0.5      0.0      0.0      0.9      5.3      0.2      0.0      0.0      0.5      0.6      0.1      0.0      0.0
+Min             0.1     11.4   2347.5      2.0      0.0      0.1      1.9      2.4      0.8      0.1      0.1      0.6      0.8      0.3      0.1      0.1
+Max          1209.3   1088.7   2011.9   1403.4   2842.5   1117.5   1101.3   1104.1   1098.0   1148.3   1108.7   1111.9   1148.0   1112.5   1094.9   1098.0
+Average      1746.0   1656.3   4300.8   2772.9   3635.7   4600.1   4759.4   5263.6   6331.5   6338.0   6238.7   6280.0   6319.4   6337.3   6328.3   6352.9
+BS              1.6      2.1      0.8      2.1      1.1      1.1      1.0      1.3      0.7      0.6      0.8      0.8      0.8      0.7      0.7      0.8
 
 --- PRUNED (avg, thousands) ---
-Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
-b1(avg)        0.25     0.37     0.53     0.76     1.00     0.50     0.58     0.69     0.84     1.00     0.75     0.79     0.84     0.92     1.00     1.00
-b2(avg)        1.00     0.71     0.53     0.34     0.25     1.00     0.81     0.69     0.56     0.50     1.00     0.90     0.84     0.78     0.75     1.00
+Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
+b1(avg)        0.25     0.33     0.48     0.74     1.00     0.50     0.55     0.65     0.83     1.00     0.75     0.78     0.83     0.91     1.00     1.00
+b2(avg)        1.00     0.70     0.49     0.32     0.25     1.00     0.80     0.66     0.55     0.50     1.00     0.90     0.83     0.77     0.75     1.00
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
-Lex1            0.4     40.3    261.1    447.8    301.5      0.4     14.3     87.2    247.3    393.6      0.4      1.8     10.6     27.2     48.2      0.4
-Lex2          303.2    452.7    330.7     38.4      0.4    384.3    271.4     72.0     10.0      0.4     37.7     23.0      9.6      2.2      0.4      0.4
-Sel-Lex         0.4     40.3    244.8     38.4      0.4      0.4     14.3     79.6     10.0      0.4      0.4      1.8     12.8      2.2      0.4      0.4
-Min             0.2     41.1    396.5     64.6      0.1      0.1     12.6    121.1     14.6      0.1      0.1      1.2      9.4      2.3      0.1      0.2
-Max           300.2    445.9    435.4    433.8    294.6    436.8    435.3    435.1    435.0    435.1    435.0    435.0    435.0    435.0    435.0    435.0
-Average       311.6    514.4    634.3    507.2    311.8    617.0    651.5    660.3    650.3    638.7    660.0    659.6    659.4    659.4    659.4    659.2
-BS              9.8     13.6     17.4     15.0      9.4     16.2     16.7     16.0     12.6     11.7     14.9     14.3     14.0     13.8     13.3     14.5
+Lex1            0.5     57.7    365.9    263.6    247.4      0.5     12.4     71.7    211.2    254.0      0.5      7.0     10.3     30.4     34.9      0.5
+Lex2          259.1    126.1     57.5      8.0      0.4     39.3     31.9     13.1      3.9      0.4      4.3      3.8      3.9      1.9      0.4      0.4
+Sel-Lex         0.5     57.7    365.3      8.0      0.4      0.5     12.4     67.3      3.9      0.4      0.5      7.0      9.7      1.9      0.4      0.5
+Min             0.1     46.4   6262.5     10.2      0.1      0.1      9.0     10.4      4.1      0.1      0.1      2.6      3.6      1.2      0.1      0.2
+Max          7448.4   3679.9   6929.8  11431.0  21301.4   3677.5   3677.4   3677.4   3677.4   3677.4   3677.4   3677.3   3677.3   3677.3   3677.3   3677.3
+Average      5708.5   5899.0  16209.5   9475.1  11129.6  15830.4  16197.1  17975.0  20128.7  20308.2  21194.3  20728.2  20501.8  20472.1  20578.2  20567.2
+BS             13.0     12.1     11.1     13.1      6.5     14.1     12.8     10.7      8.6      8.1     11.1     10.4     10.1      9.8      9.4     10.6
 
 --- SUCCESS RATE (%) ---
-Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
-b1(avg)        0.25     0.37     0.53     0.76     1.00     0.50     0.58     0.69     0.84     1.00     0.75     0.79     0.84     0.92     1.00     1.00
-b2(avg)        1.00     0.71     0.53     0.34     0.25     1.00     0.81     0.69     0.56     0.50     1.00     0.90     0.84     0.78     0.75     1.00
+Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
+b1(avg)        0.25     0.33     0.48     0.74     1.00     0.50     0.55     0.65     0.83     1.00     0.75     0.78     0.83     0.91     1.00     1.00
+b2(avg)        1.00     0.70     0.49     0.32     0.25     1.00     0.80     0.66     0.55     0.50     1.00     0.90     0.83     0.77     0.75     1.00
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
-Lex1          100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
-Lex2          100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
-Sel-Lex       100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
-Min           100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
-Max           100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
-Average       100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
-BS            100.0    100.0    100.0     83.3    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
+Lex1          100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
+Lex2          100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
+Sel-Lex       100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
+Min           100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
+Max           100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
+Average       100.0    100.0    100.0    100.0    100.0     88.9     88.9     88.9     88.9     88.9     88.9     88.9     88.9     88.9     88.9     88.9
+BS            100.0    100.0    100.0     88.9    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0    100.0
 
 --- GENERATED (avg, thousands) ---
-Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
-b1(avg)        0.25     0.37     0.53     0.76     1.00     0.50     0.58     0.69     0.84     1.00     0.75     0.79     0.84     0.92     1.00     1.00
-b2(avg)        1.00     0.71     0.53     0.34     0.25     1.00     0.81     0.69     0.56     0.50     1.00     0.90     0.84     0.78     0.75     1.00
+Ordering   Z2:FTL  Z2:TL   Z2:MD   Z2:BR   Z2:FBR  Z3:FTL  Z3:TL   Z3:MD   Z3:BR   Z3:FBR  Z4:FTL  Z4:TL   Z4:MD   Z4:BR   Z4:FBR  Z5:Any  
+b1(avg)        0.25     0.33     0.48     0.74     1.00     0.50     0.55     0.65     0.83     1.00     0.75     0.78     0.83     0.91     1.00     1.00
+b2(avg)        1.00     0.70     0.49     0.32     0.25     1.00     0.80     0.66     0.55     0.50     1.00     0.90     0.83     0.77     0.75     1.00
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
-Lex1            0.7     35.4    192.0    308.4    200.1      0.7     14.7     69.2    182.7    279.6      0.7      2.8     11.3     25.2     40.9      0.7
-Lex2          185.1    284.7    223.9     33.0      0.6    251.0    188.4     58.2     10.4      0.6     32.5     20.3      9.8      3.2      0.6      0.6
-Sel-Lex         0.7     35.4    182.1     33.0      0.6      0.7     14.7     65.1     10.4      0.6      0.7      2.8     13.3      3.2      0.6      0.7
-Min             1.2     89.7    643.0    121.3      1.2      1.3     37.8    226.1     39.9      1.3      1.5      6.6     30.4     11.9      1.4      1.8
-Max           426.5    659.5    739.6    670.7    438.8    738.3    739.8    740.0    740.0    739.9    740.0    740.0    740.0    740.0    740.0    740.1
-Average       459.2    796.3   1034.9    814.3    481.7    994.5   1084.9   1123.7   1098.9   1070.6   1128.3   1129.0   1129.2   1129.2   1128.5   1129.3
-BS              7.2     10.2     13.2     12.1      7.9     12.3     13.0     13.0     10.6      9.9     12.3     11.8     11.7     11.6     11.2     12.0
+Lex1            0.9     54.0    243.5    167.1    155.5      0.9     15.0     62.7    153.8    181.4      0.9      9.7     12.6     31.5     35.7      0.9
+Lex2          151.1     79.8     41.5      7.7      0.7     29.2     24.7     11.9      4.6      0.7      4.8      4.4      4.5      2.7      0.7      0.7
+Sel-Lex         0.9     54.0    241.2      7.7      0.7      0.9     15.0     57.7      4.6      0.7      0.9      9.7     11.2      2.7      0.7      0.9
+Min             1.4    121.4   5333.5     24.5      1.3      1.7     29.4     34.9     13.8      1.5      1.9     11.9     13.6      6.6      1.8      2.2
+Max          4232.2   2910.5   5018.0   5778.8  11059.5   2940.2   2940.3   2940.3   2940.4   2940.3   2940.4   2940.4   2940.4   2940.4   2940.4   2940.4
+Average      3827.9   4026.7   9085.5   6155.9   7766.8   9568.7  10140.9  11442.4  12959.4  12974.3  13252.9  13294.7  13209.6  13328.7  13234.2  13227.3
+BS              9.5      9.0      8.6     10.2      5.7     11.1     10.0      8.9      7.5      7.1      9.4      8.9      8.7      8.5      8.2      9.1
 
 --- BS SOLUTION QUALITY: avg error = (c1-p1)/p1 + (c2-p2)/p2 ---
-  (p1,p2) = nearest POF point by normalised Euclidean distance)
-  0.00 = exact Pareto point found;  N/A = no solution
+  (p1,p2) = nearest POF point by normalised Euclidean distance)
+  0.00 = exact Pareto point found;  N/A = no solution
 
-Zone     Z2:FTL   Z2:TL    Z2:MD    Z2:BR    Z2:FBR   Z3:FTL   Z3:TL    Z3:MD    Z3:BR    Z3:FBR   Z4:FTL   Z4:TL    Z4:MD    Z4:BR    Z4:FBR   Z5:Any  
+Zone     Z2:FTL   Z2:TL    Z2:MD    Z2:BR    Z2:FBR   Z3:FTL   Z3:TL    Z3:MD    Z3:BR    Z3:FBR   Z4:FTL   Z4:TL    Z4:MD    Z4:BR    Z4:FBR   Z5:Any  
 ----------------------------------------------------------------------------------------------------------------------------------------
-BS        0.0001  0.0006  0.0081  0.0020  0.0000  0.0017  0.0025  0.0055  0.0039  0.0000  0.0000  0.0000  0.0039  0.0039  0.0000  0.0000
+BS        0.0019  0.0125  0.0122  0.0167  0.0000  0.0061  0.0065  0.0046  0.0026  0.0000  0.0000  0.0000  0.0026  0.0026  0.0000  0.0000
+
