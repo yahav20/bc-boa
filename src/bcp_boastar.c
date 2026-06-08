@@ -1,7 +1,33 @@
-/////////////////////////////////////////////////////////////////////
-// Bounded-Cost BOA* (BCP-BOA*)
-// Faithful implementation of Skyler et al., SoCS 2022
-/////////////////////////////////////////////////////////////////////
+/*
+ * bcp_boastar.c — Bounded-Cost Bi-Objective A* (BCP-BOA*)
+ *
+ * Faithful implementation of BCP-BOA* (Skyler et al., SoCS 2022), extended
+ * with the following novel contributions:
+ *
+ *  1. Budget Score (BS) ordering  — see compute_key / ORDER_BS
+ *     Normalises f-values by the query-specific budget bounds (b1, b2) instead
+ *     of the range of optimal costs.  The key S = (F1²+F2²)/(F1+F2), where
+ *     F1=f1/b1 and F2=f2/b2, is minimised along the diagonal of the feasible
+ *     budget square, steering the search toward balanced solutions.
+ *
+ *  2. Relaxed scalar dominance for BS  — see is_dominated / record_dominance
+ *     Maintains only the minimum S value seen at each expanded graph node
+ *     rather than a full Pareto front.  This reduces dominance checks from
+ *     O(|POF|) to O(1) in time and space, and allows early pruning at node
+ *     generation rather than only at expansion.  The algorithm remains sound
+ *     (all returned solutions satisfy the bounds) but operates as a greedy
+ *     approximation: it may discard a non-dominated (g1,g2) pair whose
+ *     S-score is higher than one already expanded.
+ *
+ *  3. Lazy version-based reset  — see g_bc_version / lazy_reset
+ *     bc_boastar() is called 90+ times per benchmark query.  Resetting every
+ *     gnode between calls would touch hundreds of MB; instead each node resets
+ *     itself on first access via a version stamp, making initialisation O(1).
+ *
+ * Reference:
+ *   T. Skyler, C. Hernandez, J. Baier, S. Koenig.
+ *   "Bounded-Cost Bi-Objective Search."  SoCS 2022.
+ */
 
 #include "heap.h"
 #include "node.h"
@@ -85,7 +111,7 @@ static inline void lazy_reset(gnode *n, unsigned state_id) {
     if (g_pareto_store)
         g_pareto_count[state_id] = 0;
     if (g_best_S)
-        g_best_S[state_id] = 1e9;
+        g_best_S[state_id] = 1e9;  /* sentinel: no path expanded yet this round */
 }
 
 /*
@@ -103,7 +129,11 @@ static int is_dominated(unsigned state_id, unsigned g1, unsigned g2, OrderingFun
     if (ord == ORDER_LEX1) return (g2 >= n->gmin);
     if (ord == ORDER_LEX2) return (g1 >= n->g1min);
 
-    /* BS: O(1) single-label dominance */
+    /* BS: O(1) single-label dominance.
+     * We compute S from f-values (g+h) because the BS key is defined on f.
+     * h is fixed per graph node, so S(f1,f2) is a monotone function of (g1,g2)
+     * at a given state — storing only the minimum S seen is a valid scalar
+     * dominance criterion. */
     if (ord == ORDER_BS && g_best_S) {
         double F1 = (double)(g1 + n->h1) / (double)bc_b1_static;
         double F2 = (double)(g2 + n->h2) / (double)bc_b2_static;
@@ -213,11 +243,15 @@ static double compute_key(unsigned f1, unsigned f2, OrderingFunction ord,
         return favg * (double)BASE + fmin;
 
     case ORDER_BS: {
+        /* S = (F1²+F2²)/(F1+F2)  with  F1=f1/b1, F2=f2/b2.
+         * Equivalently S = a·F1 + (1-a)·F2  where a = F1/(F1+F2).
+         * fmin2 as tiebreaker: among equal-S nodes prefer the one less
+         * constrained in either dimension, matching the dominance direction. */
         double F1    = (double)f1 / (double)bc_b1_static;
         double F2    = (double)f2 / (double)bc_b2_static;
         double denom = F1 + F2;
         if (denom <= 0.0) return 0.0;
-        double S     = (F1*F1 + F2*F2) / denom;  /* = a·F1 + (1-a)·F2 */
+        double S     = (F1*F1 + F2*F2) / denom;
         double fmin2 = F1 < F2 ? F1 : F2;
         return S * (double)BASE + fmin2;
     }
@@ -228,7 +262,11 @@ static double compute_key(unsigned f1, unsigned f2, OrderingFunction ord,
 }
 
 /* -----------------------------------------------------------------------
- * Compute map extremes: min1, min2, max2, max1.
+ * Compute map extremes: the four corners of the Pareto-Optimal Frontier.
+ *   min1 = cost1 of the Lex(c1,c2) optimal path (Far Top-Left corner)
+ *   max2 = cost2 of the Lex(c1,c2) optimal path
+ *   max1 = cost1 of the Lex(c2,c1) optimal path (Far Bottom-Right corner)
+ *   min2 = cost2 of the Lex(c2,c1) optimal path
  * Also sets h1 and h2 for ALL graph nodes via backward Dijkstra.
  * ----------------------------------------------------------------------- */
 void compute_map_extremes(unsigned long long *min1, unsigned long long *max2,
@@ -290,10 +328,16 @@ void compute_map_extremes(unsigned long long *min1, unsigned long long *max2,
 
 /* -----------------------------------------------------------------------
  * BCP-BOA* main search.
- * b1, b2       : absolute cost bounds.
- * ord          : ordering function (SEL_LEX must be pre-resolved).
- * min1..max2   : normalization extremes (for MIN/MAX/AVG orderings).
+ *
+ * b1, b2     : absolute cost bounds.  A solution (c1,c2) is accepted iff
+ *              c1 ≤ b1 and c2 ≤ b2.
+ * ord        : ordering function.  ORDER_SEL_LEX must be pre-resolved by
+ *              the caller to either ORDER_LEX1 or ORDER_LEX2.
+ * min1..max2 : range extremes used only by MIN/MAX/AVG for normalisation.
+ *              Ignored by LEX1/LEX2/BS.
+ *
  * Returns 1 if a solution within bounds was found, 0 otherwise.
+ * The solution (if any) is written to solutions[0].
  * ----------------------------------------------------------------------- */
 int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
                unsigned long long min1, unsigned long long max1,
@@ -343,9 +387,10 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
     while (topheap() != NULL) {
         snode* n = popheap();
 
-        /* Timeout: fire every 16384 total pops (dominated + non-dominated).
-         * Checking only on non-dominated expansions fails when most pops are
-         * dominated (stat_expansions barely moves, timeout never fires). */
+        /* --- Timeout check (sampled every 2^14 pops) ---
+         * Must count dominated + non-dominated pops: when most pops are
+         * dominated, stat_expansions barely moves and the timeout never fires
+         * if we check only on expansions. */
         if (bc_timeout_ms > 0.0 &&
             ((stat_expansions + (unsigned long long)stat_pruned) & 0x3FFF) == 0) {
             struct timeval now;
@@ -359,7 +404,9 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
             }
         }
 
-        /* Dominance check at expansion */
+        /* --- Dominance filter at expansion time ---
+         * A node may have been generated before a better path was expanded;
+         * discard it here if it has since been superseded. */
         if (is_dominated(n->state, n->g1, n->g2, ord)) {
             stat_pruned++;
             if (next_recycled < MAX_RECYCLE)
@@ -367,10 +414,11 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
             continue;
         }
 
-        /* Not dominated — record permanently so future nodes can be pruned */
+        /* Register this expansion so future nodes at the same state can be pruned. */
         record_dominance(n->state, n->g1, n->g2, ord);
 
-        /* Goal test */
+        /* --- Goal test ---
+         * BCP-BOA* returns the first solution found (best under the ordering). */
         if (n->state == (int)goal_state->id) {
             solutions[nsolutions][0] = n->g1;
             solutions[nsolutions][1] = n->g2;
@@ -441,11 +489,19 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
 }
 
 /* -----------------------------------------------------------------------
- * Select the 5 paper pivots from the full POF.
- * pof[i][0] = c1 cost, pof[i][1] = c2 cost of POF solution i.
- * Pivots are returned as normalised (nc1, nc2) ∈ [0,1]².
- * FTL = (0,1), FBR = (1,0) (the Lex extreme solutions).
- * MD, TL, BR are selected from the actual POF.
+ * Select the 5 paper pivots from the full POF (Skyler et al., SoCS 2022).
+ *
+ * All coordinates are normalised by the cost ranges to [0,1]²:
+ *   nc = (c - min) / (max - min)
+ *
+ * FTL = (0, 1): Lex-optimal in dimension 1.  Fixed corner, not on POF search.
+ * FBR = (1, 0): Lex-optimal in dimension 2.  Fixed corner.
+ * MD:  closest POF point to the diagonal (where nc1 ≈ nc2).
+ * TL:  closest POF point to the midpoint of FTL and MD.
+ * BR:  closest POF point to the midpoint of FBR and MD.
+ *
+ * TL and BR subdivide the POF into quarters, providing diverse test budgets
+ * between the extremes and the balanced midpoint.
  * ----------------------------------------------------------------------- */
 void select_pivots(unsigned (*pof)[2], unsigned npof,
                    unsigned long long min1, unsigned long long max1,
@@ -572,6 +628,8 @@ void call_bc_boastar(OrderingFunction ord, PivotType pivot_type, int zone)
     double py = pivots[pivot_type][1];
 
     double b_bar1, b_bar2;
+    /* Zone 5 (b_bar = 1.0, 1.0) is supported only in benchmark.c.
+     * The single-query CLI maps unrecognised zones to zone 4. */
     switch (zone) {
     case 2: b_bar1=(3.0*px+1.0)/4.0; b_bar2=(3.0*py+1.0)/4.0; break;
     case 3: b_bar1=(px+1.0)/2.0;     b_bar2=(py+1.0)/2.0;     break;
