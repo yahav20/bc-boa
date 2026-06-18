@@ -41,6 +41,7 @@
 #include <math.h>
 #include <sys/time.h>
 #include <stdbool.h>
+#include <assert.h>
 
 extern gnode* graph_node;
 extern unsigned num_gnodes;
@@ -343,6 +344,8 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
                unsigned long long min1, unsigned long long max1,
                unsigned long long min2, unsigned long long max2)
 {
+    assert(ord != ORDER_SEL_LEX && "ORDER_SEL_LEX must be pre-resolved to LEX1/LEX2 by the caller");
+
     struct timeval bc_t0;
     gettimeofday(&bc_t0, NULL);
 
@@ -392,7 +395,7 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
          * dominated, stat_expansions barely moves and the timeout never fires
          * if we check only on expansions. */
         if (bc_timeout_ms > 0.0 &&
-            ((stat_expansions + (unsigned long long)stat_pruned) & 0x3FFF) == 0) {
+            ((stat_expansions + (unsigned long long)stat_pruned) & 0xFF) == 0) {
             struct timeval now;
             gettimeofday(&now, NULL);
             double elapsed = 1000.0 * (now.tv_sec  - bc_t0.tv_sec)

@@ -81,6 +81,9 @@ typedef struct {
 #define N_ZONES 4
 #define N_PIV   5
 
+_Static_assert(ORDER_SEL_LEX == 2, "ORDER_SEL_LEX value changed — update benchmark.c loop");
+_Static_assert(ORDER_BS      == 6, "ORDER_BS value changed — check N_ORD in benchmark.c");
+
 static Acc results[N_ORD][N_ZONES][N_PIV];
 
 /* BOA* aggregate stats */
