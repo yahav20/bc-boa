@@ -77,12 +77,13 @@ typedef struct {
 
 /* Layout: [ordering 0..5][zone_idx 0..3][pivot_idx 0..4]
  * zone_idx: 0=Z2, 1=Z3, 2=Z4, 3=Z5   (Z5 uses only pivot_idx=0) */
-#define N_ORD   7
+#define N_ORD   8
 #define N_ZONES 4
 #define N_PIV   5
 
 _Static_assert(ORDER_SEL_LEX == 2, "ORDER_SEL_LEX value changed — update benchmark.c loop");
 _Static_assert(ORDER_BS      == 6, "ORDER_BS value changed — check N_ORD in benchmark.c");
+_Static_assert(ORDER_SBS     == 7, "ORDER_SBS value changed — check N_ORD in benchmark.c");
 
 static Acc results[N_ORD][N_ZONES][N_PIV];
 
@@ -136,7 +137,7 @@ static void print_table(const char *title, double metric[N_ORD][N_ZONES][N_PIV],
                          const char *fmt)
 {
     static const char *ord_names[] =
-        {"Lex1","Lex2","Sel-Lex","Min","Max","Average","BS"};
+        {"Lex1","Lex2","Sel-Lex","Min","Max","Average","BS","SBS"};
     static const char *piv_names[] = {"FTL","TL","MD","BR","FBR"};
     static const int   zones[]     = {2,3,4,5};
 
@@ -405,9 +406,9 @@ int main(int argc, char **argv)
                     a->timed_out += bc_timed_out;
                     a->n++;
 
-                    /* BS quality: find nearest POF point by normalised Euclidean distance,
+                    /* BS/SBS quality: find nearest POF point by normalised Euclidean distance,
                      * then compute Error = (c1-p1)/p1 + (c2-p2)/p2 */
-                    if (ord == ORDER_BS && nsolutions > 0 && !bc_timed_out && npof > 0) {
+                    if ((ord == ORDER_BS || ord == ORDER_SBS) && nsolutions > 0 && !bc_timed_out && npof > 0) {
                         double range1 = (double)(max1 - min1);
                         double range2 = (double)(max2 - min2);
                         double c1 = (double)solutions[0][0];
@@ -515,10 +516,10 @@ int main(int argc, char **argv)
     }
     print_table("GENERATED (avg, thousands)", avg_gen, results, "%.1f");
 
-    /* ---- BS Solution Quality table ---- */
+    /* ---- BS/SBS Solution Quality table ---- */
     static const char *piv_names_q[] = {"FTL","TL","MD","BR","FBR"};
     static const int   zones_q[]     = {2,3,4,5};
-    printf("\n--- BS SOLUTION QUALITY: avg error = (c1-p1)/p1 + (c2-p2)/p2 ---\n");
+    printf("\n--- BS/SBS SOLUTION QUALITY: avg error = (c1-p1)/p1 + (c2-p2)/p2 ---\n");
     printf("  (p1,p2) = nearest POF point by normalised Euclidean distance)\n");
     printf("  0.00 = exact Pareto point found;  N/A = no solution\n\n");
     printf("%-8s", "Zone");
@@ -528,23 +529,29 @@ int main(int argc, char **argv)
     printf(" %-8s\n", "Z5:Any");
     hline(8 + (3*N_PIV+1)*8);
     {
-        int oi = (int)ORDER_BS;
-        printf("%-8s", "BS");
-        for (int zi = 0; zi < 3; zi++) {
-            for (int pi = 0; pi < N_PIV; pi++) {
-                Acc *a = &results[oi][zi][pi];
-                if (a->error_n > 0)
-                    printf(" %7.4f", a->error_sum / a->error_n);
-                else
-                    printf(" %7s", "N/A");
+        static const struct { int oi; const char *label; } quality_ords[] = {
+            { (int)ORDER_BS,  "BS"  },
+            { (int)ORDER_SBS, "SBS" },
+        };
+        for (int k = 0; k < 2; k++) {
+            int oi = quality_ords[k].oi;
+            printf("%-8s", quality_ords[k].label);
+            for (int zi = 0; zi < 3; zi++) {
+                for (int pi = 0; pi < N_PIV; pi++) {
+                    Acc *a = &results[oi][zi][pi];
+                    if (a->error_n > 0)
+                        printf(" %7.4f", a->error_sum / a->error_n);
+                    else
+                        printf(" %7s", "N/A");
+                }
             }
-        }
-        {
-            Acc *a = &results[oi][3][0];
-            if (a->error_n > 0)
-                printf(" %7.4f\n", a->error_sum / a->error_n);
-            else
-                printf(" %7s\n", "N/A");
+            {
+                Acc *a = &results[oi][3][0];
+                if (a->error_n > 0)
+                    printf(" %7.4f\n", a->error_sum / a->error_n);
+                else
+                    printf(" %7s\n", "N/A");
+            }
         }
     }
 

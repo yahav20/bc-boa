@@ -34,8 +34,12 @@ typedef enum {
     ORDER_MIN     = 3,  /* Primary: min(nf1,nf2), tiebreak: max.  Pareto dominance. */
     ORDER_MAX     = 4,  /* Primary: max(nf1,nf2), tiebreak: min.  Pareto dominance. */
     ORDER_AVG     = 5,  /* Primary: avg(nf1,nf2), tiebreak: min.  Pareto dominance. */
-    ORDER_BS      = 6   /* Budget Score: S = (F1²+F2²)/(F1+F2), F1=f1/b1, F2=f2/b2.
+    ORDER_BS      = 6,  /* Budget Score: S = (F1²+F2²)/(F1+F2), F1=f1/b1, F2=f2/b2.
                          * Scalar dominance: min S value seen per node. */
+    ORDER_SBS     = 7   /* Skewed Budget Score: α=b1/(b1+b2), G1=(1-α)F1, G2=αF2,
+                         * SBS=(G1²+G2²)/(G1+G2).  Focuses penalty on the bottleneck
+                         * dimension at asymmetric (FTL/FBR) pivots.
+                         * Scalar dominance: reuses g_best_S[], min SBS seen per node. */
 } OrderingFunction;
 
 /*

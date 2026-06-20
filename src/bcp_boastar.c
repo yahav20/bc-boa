@@ -88,9 +88,10 @@ static ParetoPoint *g_pareto_store = NULL; /* [num_gnodes * MAX_PARETO_PER_NODE]
 static unsigned    *g_pareto_count = NULL; /* [num_gnodes] */
 static double      *g_best_S       = NULL; /* [num_gnodes] best S score seen (ORDER_BS) */
 
-/* Bounds used by ORDER_BS; set at the start of every bc_boastar() call. */
-static unsigned bc_b1_static = 1;
-static unsigned bc_b2_static = 1;
+/* Bounds used by ORDER_BS/ORDER_SBS; set at the start of every bc_boastar() call. */
+static unsigned bc_b1_static    = 1;
+static unsigned bc_b2_static    = 1;
+static double   bc_alpha_static = 0.5; /* b1/(b1+b2), pre-computed for ORDER_SBS */
 
 static void ensure_pareto_store(void) {
     if (g_pareto_store != NULL) return;
@@ -144,6 +145,21 @@ static int is_dominated(unsigned state_id, unsigned g1, unsigned g2, OrderingFun
         return (S >= g_best_S[state_id]);
     }
 
+    /* SBS: same O(1) scalar dominance using the skewed score.
+     * g_best_S[] is reused — BS and SBS never co-execute, and lazy_reset
+     * clears it at the start of each bc_boastar() call. */
+    if (ord == ORDER_SBS && g_best_S) {
+        double alpha = bc_alpha_static;
+        double F1    = (double)(g1 + n->h1) / (double)bc_b1_static;
+        double F2    = (double)(g2 + n->h2) / (double)bc_b2_static;
+        double G1    = (1.0 - alpha) * F1;
+        double G2    = alpha * F2;
+        double denom = G1 + G2;
+        if (denom <= 0.0) return 0;
+        double SBS   = (G1*G1 + G2*G2) / denom;
+        return (SBS >= g_best_S[state_id]);
+    }
+
     /* Min / Max / Avg */
     ParetoPoint *front = g_pareto_store + (size_t)state_id * MAX_PARETO_PER_NODE;
     unsigned cnt = g_pareto_count[state_id];
@@ -175,6 +191,21 @@ static void record_dominance(unsigned state_id, unsigned g1, unsigned g2, Orderi
         if (denom > 0.0) {
             double S = (F1*F1 + F2*F2) / denom;
             if (S < g_best_S[state_id]) g_best_S[state_id] = S;
+        }
+        return;
+    }
+
+    /* SBS: store only the best SBS score seen — O(1) update */
+    if (ord == ORDER_SBS && g_best_S) {
+        double alpha = bc_alpha_static;
+        double F1    = (double)(g1 + n->h1) / (double)bc_b1_static;
+        double F2    = (double)(g2 + n->h2) / (double)bc_b2_static;
+        double G1    = (1.0 - alpha) * F1;
+        double G2    = alpha * F2;
+        double denom = G1 + G2;
+        if (denom > 0.0) {
+            double SBS = (G1*G1 + G2*G2) / denom;
+            if (SBS < g_best_S[state_id]) g_best_S[state_id] = SBS;
         }
         return;
     }
@@ -255,6 +286,22 @@ static double compute_key(unsigned f1, unsigned f2, OrderingFunction ord,
         double S     = (F1*F1 + F2*F2) / denom;
         double fmin2 = F1 < F2 ? F1 : F2;
         return S * (double)BASE + fmin2;
+    }
+
+    case ORDER_SBS: {
+        /* Skewed Budget Score: α=b1/(b1+b2), G1=(1-α)·F1, G2=α·F2.
+         * SBS=(G1²+G2²)/(G1+G2).  When one budget dominates the other,
+         * α skews the score to penalise the bottleneck dimension. */
+        double alpha = bc_alpha_static;
+        double F1    = (double)f1 / (double)bc_b1_static;
+        double F2    = (double)f2 / (double)bc_b2_static;
+        double G1    = (1.0 - alpha) * F1;
+        double G2    = alpha * F2;
+        double denom = G1 + G2;
+        if (denom <= 0.0) return 0.0;
+        double SBS   = (G1*G1 + G2*G2) / denom;
+        double gmin  = G1 < G2 ? G1 : G2;
+        return SBS * (double)BASE + gmin;
     }
 
     default:
@@ -358,8 +405,9 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
     stat_created    = 0;
     bc_timed_out    = 0;
 
-    bc_b1_static = (b1 > 0) ? b1 : 1;
-    bc_b2_static = (b2 > 0) ? b2 : 1;
+    bc_b1_static    = (b1 > 0) ? b1 : 1;
+    bc_b2_static    = (b2 > 0) ? b2 : 1;
+    bc_alpha_static = (double)bc_b1_static / ((double)bc_b1_static + (double)bc_b2_static);
 
     emptyheap();
 
@@ -454,7 +502,7 @@ int bc_boastar(unsigned b1, unsigned b2, OrderingFunction ord,
              * - Min/Max/Avg: O(|front|) pareto scan; skip at generation time
              *   to avoid billions of scans on hard queries.  Dominated nodes
              *   will be caught at expansion time instead. */
-            if ((ord == ORDER_LEX1 || ord == ORDER_LEX2 || ord == ORDER_BS) &&
+            if ((ord == ORDER_LEX1 || ord == ORDER_LEX2 || ord == ORDER_BS || ord == ORDER_SBS) &&
                 is_dominated(nsucc, newg1, newg2, ord)) {
                 stat_pruned++;
                 continue;
@@ -576,6 +624,7 @@ static const char* ordering_name(OrderingFunction ord) {
     case ORDER_MAX:     return "Max";
     case ORDER_AVG:     return "Average";
     case ORDER_BS:      return "BS";
+    case ORDER_SBS:     return "SBS";
     default:            return "?";
     }
 }

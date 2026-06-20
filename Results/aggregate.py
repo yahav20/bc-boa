@@ -14,10 +14,10 @@ import sys
 import csv
 from collections import defaultdict
 
-ORD_NAMES  = ["Lex1", "Lex2", "Sel-Lex", "Min", "Max", "Average", "BS"]
+ORD_NAMES  = ["Lex1", "Lex2", "Sel-Lex", "Min", "Max", "Average", "BS", "SBS"]
 PIV_NAMES  = ["FTL", "TL", "MD", "BR", "FBR"]
 ZONES      = [2, 3, 4, 5]
-N_ORD      = 7
+N_ORD      = 8
 N_ZONES    = 4
 N_PIV      = 5
 
@@ -199,9 +199,10 @@ def main():
     print_table("SUCCESS RATE (%)",             pct_ok, bcp)
     print_table("GENERATED (avg, thousands)",   avg_gen, bcp)
 
-    # BS solution quality
-    ORDER_BS = 6
-    print("\n--- BS SOLUTION QUALITY: avg error = (c1-p1)/p1 + (c2-p2)/p2 ---")
+    # BS/SBS solution quality
+    ORDER_BS  = 6
+    ORDER_SBS = 7
+    print("\n--- BS/SBS SOLUTION QUALITY: avg error = (c1-p1)/p1 + (c2-p2)/p2 ---")
     print("  (p1,p2) = nearest POF point by normalised Euclidean distance)")
     print("  0.00 = exact Pareto point found;  N/A = no solution\n")
 
@@ -214,20 +215,21 @@ def main():
     print(row)
     hline(8 + (3*N_PIV+1)*8)
 
-    row = f"{'BS':<8}"
-    for zi in range(3):
-        for pi in range(N_PIV):
-            a = bcp.get((ORDER_BS, zi, pi))
-            if a and a.error_n > 0:
-                row += f" {a.error_sum/a.error_n:7.4f}"
-            else:
-                row += f" {'N/A':>7}"
-    a = bcp.get((ORDER_BS, 3, 0))
-    if a and a.error_n > 0:
-        row += f" {a.error_sum/a.error_n:8.4f}"
-    else:
-        row += f" {'N/A':>8}"
-    print(row)
+    for oi, label in ((ORDER_BS, "BS"), (ORDER_SBS, "SBS")):
+        row = f"{label:<8}"
+        for zi in range(3):
+            for pi in range(N_PIV):
+                a = bcp.get((oi, zi, pi))
+                if a and a.error_n > 0:
+                    row += f" {a.error_sum/a.error_n:7.4f}"
+                else:
+                    row += f" {'N/A':>7}"
+        a = bcp.get((oi, 3, 0))
+        if a and a.error_n > 0:
+            row += f" {a.error_sum/a.error_n:8.4f}"
+        else:
+            row += f" {'N/A':>8}"
+        print(row)
     print()
 
 if __name__ == "__main__":

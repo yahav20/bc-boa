@@ -19,7 +19,8 @@ static OrderingFunction parse_ordering(const char *s) {
     if (strcmp(s, "max")    == 0) return ORDER_MAX;
     if (strcmp(s, "avg")    == 0) return ORDER_AVG;
     if (strcmp(s, "bs")     == 0) return ORDER_BS;
-    fprintf(stderr, "Unknown ordering '%s'. Use: lex1 lex2 sellex min max avg bs\n", s);
+    if (strcmp(s, "sbs")    == 0) return ORDER_SBS;
+    fprintf(stderr, "Unknown ordering '%s'. Use: lex1 lex2 sellex min max avg bs sbs\n", s);
     exit(1);
 }
 
@@ -37,7 +38,7 @@ static PivotType parse_pivot(const char *s) {
 int main(int argc, char** argv) {
     if (argc != 7) {
         printf("Usage: %s [graph_file] [start_node] [goal_node] [ordering] [pivot] [zone]\n", argv[0]);
-        printf("  ordering : lex1 | lex2 | sellex | min | max | avg\n");
+        printf("  ordering : lex1 | lex2 | sellex | min | max | avg | bs | sbs\n");
         printf("  pivot    : ftl | tl | md | br | fbr\n");
         printf("  zone     : 2 | 3 | 4\n");
         exit(1);
